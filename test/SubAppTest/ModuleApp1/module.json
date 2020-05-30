@@ -1,0 +1,6 @@
+{
+  "ModuleName": "ModuleApp1",
+  "ModuleVersion": "1.0.0",
+  "ModuleType": 1,
+  "ModuleEntrypoint": "ModuleApp1.dll"
+}

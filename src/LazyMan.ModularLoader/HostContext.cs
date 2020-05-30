@@ -1,7 +1,8 @@
-﻿using LazyMan.ModularLoader.Graph;
+using LazyMan.ModularLoader.Graph;
 using LazyMan.ModularLoader.Internal;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 
@@ -16,6 +17,9 @@ namespace LazyMan.ModularLoader
         public Dictionary<string, PluginAssemblyLoadContext> Plugins { get; } = new Dictionary<string, PluginAssemblyLoadContext>(StringComparer.OrdinalIgnoreCase);
 
         public PluginInfoCollection PluginInfos { get; } = new PluginInfoCollection();
+
+
+        public List<Assembly> SharedAssemblies { get; } = new List<Assembly>();
 #nullable enable
     }
 }

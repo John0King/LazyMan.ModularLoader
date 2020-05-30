@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<OutDir>../dist</OutDir>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\src\LazyMan.ModularLoader.AspNetCore\LazyMan.ModularLoader.AspNetCore.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="app-modules/">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+</Project>

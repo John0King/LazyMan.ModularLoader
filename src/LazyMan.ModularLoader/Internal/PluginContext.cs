@@ -1,8 +1,9 @@
-﻿using LazyMan.ModularLoader.Graph;
+using LazyMan.ModularLoader.Graph;
 using LazyMan.ModularLoader.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
 
@@ -19,8 +20,8 @@ namespace LazyMan.ModularLoader
         public IEnumerable<PluginInfo> PluginInfos => HostContext.PluginInfos.GetOrderedPlugins();
         public AssemblyLoadContext HostLoadContext => HostContext.HostLoadContext;
 
-        public Dictionary<string, PluginAssemblyLoadContext> Plugins { get; } = new Dictionary<string, PluginAssemblyLoadContext>(StringComparer.OrdinalIgnoreCase);
+        public IEnumerable<Assembly> SharedAssemblies => HostContext.SharedAssemblies;
 
-        
+        public Dictionary<string, PluginAssemblyLoadContext> Plugins { get; } = new Dictionary<string, PluginAssemblyLoadContext>(StringComparer.OrdinalIgnoreCase);
     }
 }

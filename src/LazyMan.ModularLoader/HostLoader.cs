@@ -1,4 +1,4 @@
-﻿using LazyMan.ModularLoader.Graph;
+using LazyMan.ModularLoader.Graph;
 using LazyMan.ModularLoader.Internal;
 using Microsoft.VisualBasic;
 using System;
@@ -21,39 +21,52 @@ namespace LazyMan.ModularLoader
         {
             HostLoadContext = AssemblyLoadContext.CurrentContextualReflectionContext ?? AssemblyLoadContext.Default,
         };
-        public virtual void LoadPlugin(string pluginName, string pluginAssemblyPath)
+
+        public void AddSharedAssembly(IEnumerable<Assembly> sharedAssemblies)
         {
-            //// 优先处理共享程序集
-            //var sharedAssebmles = SharedAssemblySelector?.Invoke(pluginAssembly);
-            //var sharedLoadContext = new AssemblyLoadContext($"{nameof(LazyMan)}:Shared:{pluginName}", true);
+            HostContext.SharedAssemblies.AddRange(sharedAssemblies);
+        }
 
+        public void AddSharedAssembly(Assembly sharedAssembly)
+        {
+            HostContext.SharedAssemblies.Add(sharedAssembly);
+        }
 
-            //sharedLoadContext
-            var pluginResolver = new PluginAssemblyDependencyResolver(pluginAssemblyPath, new PluginContext(this.HostLoadContext)
+        public void AddSharedAssembly(params Assembly[] assemblies)
+        {
+            this.AddSharedAssembly(assemblies as IEnumerable<Assembly>);
+        }
+
+        /// <summary>
+        /// 加载新的插件
+        /// </summary>
+        /// <param name="info"></param>
+        public virtual Assembly LoadPlugin(PluginInfo info)
+        {
+            
+            this.HostContext.PluginInfos.Add(info);
+            var context = new PluginContext(this.HostContext);
+            foreach (var d in info.DependedPlugins)
             {
-                SharedAssemblyLoadContexts = SharedPlugins
-            });
-            var pluginContext = new PluginAssemblyLoadContext($"{nameof(LazyMan)}:Plugin:{pluginName}", pluginResolver);
-            pluginContext.LoadFromAssemblyPath(pluginAssemblyPath);
-            IsolatedPlugins.Add(pluginContext);
+                if (this.HostContext.Plugins.TryGetValue(d, out var alc))
+                {
+                    context.Plugins[d] = alc;
+                }
+            }
+            var pluginAlc = new PluginAssemblyLoadContext(info, context);
+            this.HostContext.Plugins[info.PluginName] = pluginAlc;
+            return pluginAlc.LoadFromAssemblyPath(info.PluginDll);
+
         }
 
-
-
-
-        public virtual void LoadPlugin(PluginInfo info)
+        /// <summary>
+        /// 从已有的列表中加载插件
+        /// </summary>
+        public virtual IEnumerable<Assembly> LoadPlugins()
         {
-            // 1. get dependency alc
-
-            // 2. use the alc to create current alc
-
-            // 3. add to alc list
-        }
-        public virtual void LoadPlugins()
-        {
+            var result = new List<Assembly>();
             // load as the right order
             var infos = this.HostContext.PluginInfos.GetOrderedPlugins();
-            var alcDic = new Dictionary<string, AssemblyLoadContext>(StringComparer.OrdinalIgnoreCase);
             foreach (var info in infos)
             {
                 var context = new PluginContext(this.HostContext);
@@ -64,12 +77,13 @@ namespace LazyMan.ModularLoader
                         context.Plugins[d] = alc;
                     }
                 }
-                var pluginContext = new PluginAssemblyLoadContext(info, context);
-                alcDic.Add(info.PluginName, pluginContext);
-                pluginContext.LoadFromAssemblyPath(info.PluginDll);
+                var pluginAlc = new PluginAssemblyLoadContext(info, context);
+                this.HostContext.Plugins[info.PluginName] = pluginAlc;
+                var assembly =  pluginAlc.LoadFromAssemblyPath(info.PluginDll);
+                result.Add(assembly);
             }
 
-
+            return result;
 
         }
 
@@ -83,15 +97,14 @@ namespace LazyMan.ModularLoader
             var cts = new TaskCompletionSource<bool>();
             try
             {
-                var alc = AssemblyLoadContext.All
-                    .Where(x => x.Name.TextEq($"{nameof(LazyMan)}:Plugin:{info.PluginName}"))
-                    .FirstOrDefault();
-
-                alc.Unloading += (a) =>
+                if(this.HostContext.Plugins.TryGetValue(info.PluginName, out var alc))
                 {
-                    cts.SetResult(true);
-                };
-                alc.Unload();
+                    alc.Unloading += (a) =>
+                    {
+                        cts.SetResult(true);
+                    };
+                    alc.Unload();
+                }
             }
             catch (Exception e)
             {

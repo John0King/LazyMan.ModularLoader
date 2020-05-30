@@ -1,5 +1,7 @@
 # 如果要从更高级别的目录继承 .editorconfig 设置，请删除以下行
 root = true
+[*.csproj]
+indent_size = 2;
 
 # c# 文件
 [*.cs]
@@ -10,6 +12,7 @@ root = true
 indent_size = 4
 indent_style = space
 tab_width = 4
+charset = utf-8
 
 # 新行首选项
 end_of_line = crlf

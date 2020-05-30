@@ -1,18 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
 		<TargetFramework>netcoreapp3.1</TargetFramework>
-		<!--<OutputPath>..\dist</OutputPath>-->
-		<OutDir>..\dist</OutDir>
+		<OutDir>..\dist\modules\Module2</OutDir>
+		<Version>1.0.1</Version>
+
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="AutoMapper" Version="8.0.0" />
+	  <PackageReference Include="AutoMapper" Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\LazyMan.ModularLoader\LazyMan.ModularLoader.csproj" />
 		<ProjectReference Include="..\ModuleShared\ModuleShared.csproj" />
 	</ItemGroup>
 
