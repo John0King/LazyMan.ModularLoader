@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,5 +45,42 @@ namespace LazyMan.ModularLoader.Graph
         {
             return Infos.Values.Cast<PluginInfoWrap>().OrderByDescending(p => p.Count).Select(x => x.PluginInfo!);
         }
+
+        /// <summary>
+        /// Remove infoOnly
+        /// </summary>
+        /// <param name="info"></param>
+        public void Remove(PluginInfo info)
+        {
+            if(this.Infos.TryGetValue(info.PluginName, out var wrap))
+            {
+                wrap.MinusCount();
+                this.Infos.Remove(info.PluginName);
+            }
+        }
+
+        public List<PluginInfo> GetRemoveEffected(PluginInfo info)
+        {
+            var result = new List<PluginInfo>();
+            result.Add(info);
+
+            GetEffected(info);
+            return result;
+
+            void GetEffected(PluginInfo info)
+            {
+                var infos = this.Infos.Select(x => x.Value.PluginInfo).OfType<PluginInfo>()
+                .Where(v => v.DependedPlugins.Contains(info.PluginName, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+                result.AddRange(infos);
+
+                foreach(var i in infos)
+                {
+                    GetEffected(i);
+                }
+            }
+             
+        }
+
     }
 }

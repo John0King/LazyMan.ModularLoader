@@ -1,6 +1,7 @@
 using LazyMan.ModularLoader.Graph;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -17,8 +18,21 @@ namespace LazyMan.ModularLoader.Internal
         {
             PluginInfo = info ?? throw new ArgumentNullException(nameof(info));
             ALCContext = alcContext ?? throw new ArgumentNullException(nameof(alcContext));
-            Resolver = new AssemblyDependencyResolver(info.PluginDll);
+            try
+            {
+                // resolver have bug for fileName
+                Resolver = new AssemblyDependencyResolver(info.PluginDll);
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine(e);
+            }
+            // if this load fail, then throw
+            EntryAssemlby = this.LoadFromAssemblyPath(info.PluginDll);
         }
+
+        public Assembly EntryAssemlby { get; }
+
         /// <summary>
         /// the <see cref="PluginInfo"/>
         /// </summary>
@@ -32,7 +46,7 @@ namespace LazyMan.ModularLoader.Internal
         /// <summary>
         /// the dependencyReolver
         /// </summary>
-        AssemblyDependencyResolver Resolver { get; }
+        AssemblyDependencyResolver? Resolver { get; }
 
         /// <inheritdoc />
         protected override Assembly? Load(AssemblyName assemblyName)
@@ -65,7 +79,7 @@ namespace LazyMan.ModularLoader.Internal
 
 
             // load the dependency from our only
-            var path = Resolver.ResolveAssemblyToPath(assemblyName);
+            var path = Resolver?.ResolveAssemblyToPath(assemblyName);
             if (path != null)
             {
                 return LoadFromAssemblyPath(path);
@@ -100,7 +114,7 @@ namespace LazyMan.ModularLoader.Internal
         /// <remarks> native ?  do we need any other handle method ?</remarks>
         protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
         {
-            var path = Resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+            var path = Resolver?.ResolveUnmanagedDllToPath(unmanagedDllName);
             if (path != null)
             {
                 return LoadUnmanagedDllFromPath(path);

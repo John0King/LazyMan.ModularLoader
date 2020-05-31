@@ -12,9 +12,9 @@ namespace LazyMan.ModularLoader
 {
     public class HostLoader
     {
-        public HostLoader(IEnumerable<PluginInfo> pluginInfos)
+        public HostLoader()
         {
-            this.HostContext.PluginInfos.AddRange(pluginInfos);
+
         }
 
         public HostContext HostContext { get; } = new HostContext
@@ -41,9 +41,14 @@ namespace LazyMan.ModularLoader
         /// 加载新的插件
         /// </summary>
         /// <param name="info"></param>
-        public virtual Assembly LoadPlugin(PluginInfo info)
+        public virtual (PluginInfo info, PluginAssemblyLoadContext? alc) LoadPlugin(PluginInfo info)
         {
-            
+
+            if (this.HostContext.Plugins.ContainsKey(info.PluginName))
+            {
+                var plugin = this.HostContext.Plugins[info.PluginName];
+                return (info, plugin);
+            }
             this.HostContext.PluginInfos.Add(info);
             var context = new PluginContext(this.HostContext);
             foreach (var d in info.DependedPlugins)
@@ -53,34 +58,33 @@ namespace LazyMan.ModularLoader
                     context.Plugins[d] = alc;
                 }
             }
-            var pluginAlc = new PluginAssemblyLoadContext(info, context);
-            this.HostContext.Plugins[info.PluginName] = pluginAlc;
-            return pluginAlc.LoadFromAssemblyPath(info.PluginDll);
+            try
+            {
+                var pluginAlc = new PluginAssemblyLoadContext(info, context);
+                this.HostContext.Plugins[info.PluginName] = pluginAlc;
+                return (info, pluginAlc);
+            }
+            catch
+            {
+                return (info, null);
+            }
+            
 
         }
 
         /// <summary>
         /// 从已有的列表中加载插件
         /// </summary>
-        public virtual IEnumerable<Assembly> LoadPlugins()
+        public virtual IEnumerable<(PluginInfo info, PluginAssemblyLoadContext? alc)> LoadPlugins(IEnumerable<PluginInfo> pluginInfos)
         {
-            var result = new List<Assembly>();
+            this.HostContext.PluginInfos.AddRange(pluginInfos);
+            var result = new List<(PluginInfo,PluginAssemblyLoadContext?)>();
             // load as the right order
             var infos = this.HostContext.PluginInfos.GetOrderedPlugins();
             foreach (var info in infos)
             {
-                var context = new PluginContext(this.HostContext);
-                foreach(var d in info.DependedPlugins)
-                {
-                    if(this.HostContext.Plugins.TryGetValue(d, out var alc))
-                    {
-                        context.Plugins[d] = alc;
-                    }
-                }
-                var pluginAlc = new PluginAssemblyLoadContext(info, context);
-                this.HostContext.Plugins[info.PluginName] = pluginAlc;
-                var assembly =  pluginAlc.LoadFromAssemblyPath(info.PluginDll);
-                result.Add(assembly);
+                var r = LoadPlugin(info);
+                result.Add(r);
             }
 
             return result;
@@ -94,10 +98,39 @@ namespace LazyMan.ModularLoader
         /// <returns>等待卸载完成</returns>
         public Task Unload(PluginInfo info)
         {
+            var tasks = new List<Task>();
+            var infos = GetUnloadEffected(info);
+            infos.Reverse(); // 以相反的方向加载,  第一个是依赖此插件的最严重的, 最后一个是当前插件
+            foreach (var i in infos)
+            {
+                this.HostContext.PluginInfos.Remove(info);
+                tasks.Add(this.UnloadOnly(info));
+            }
+
+            return Task.WhenAll(tasks);
+        }
+
+        /// <summary>
+        /// 获取受影响的信息, 注意 此处第一个是当前插件信息,下面是依赖它的插件信息
+        /// </summary>
+        /// <param name="info"></param>
+        /// <returns></returns>
+        public IEnumerable<PluginInfo> GetUnloadEffected(PluginInfo info)
+        {
+            return this.HostContext.PluginInfos.GetRemoveEffected(info);
+        }
+
+        /// <summary>
+        /// 仅卸载不管其他事情
+        /// </summary>
+        /// <param name="info">插件信息</param>
+        /// <returns></returns>
+        private Task UnloadOnly(PluginInfo info)
+        {
             var cts = new TaskCompletionSource<bool>();
             try
             {
-                if(this.HostContext.Plugins.TryGetValue(info.PluginName, out var alc))
+                if (this.HostContext.Plugins.TryGetValue(info.PluginName, out var alc))
                 {
                     alc.Unloading += (a) =>
                     {
