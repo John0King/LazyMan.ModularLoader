@@ -1,0 +1,3 @@
+﻿a test for static file
+
+this is a file from HostApp

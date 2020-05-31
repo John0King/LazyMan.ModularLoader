@@ -47,7 +47,14 @@ namespace LazyMan.ModularLoader.Internal
                 return LoadFromAssemblyPath(path);
             }
 
-            // razor bug
+            a =  ALCContext.HostLoadContext.LoadFromAssemblyName(assemblyName);
+            if(a != null)
+            {
+                return a;
+            }
+           
+
+            // razor issue
 
             System.Diagnostics.Debug.WriteLine(assemblyName);
 
