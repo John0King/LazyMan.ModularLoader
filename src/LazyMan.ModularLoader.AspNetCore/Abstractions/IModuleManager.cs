@@ -9,10 +9,12 @@ namespace LazyMan.ModularLoader.AspNetCore.Abstractions
     public interface IModuleManager
     {
         void Initialize();
-        Assembly LoadModuler(ModuleManifest moduleManifest);
+        ModuleInfo LoadModuler(ModuleManifest moduleManifest);
 
 
         IEnumerable<ModuleManifest> GetModules();
+
+        IEnumerable<ModuleInfo> GetLoadedModules();
 
         Task EnableModuleAsync(string moduleName);
 

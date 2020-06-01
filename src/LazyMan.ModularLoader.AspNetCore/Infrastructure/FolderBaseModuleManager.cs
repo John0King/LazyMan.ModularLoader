@@ -1,5 +1,7 @@
 using LazyMan.ModularLoader.AspNetCore.Abstractions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
@@ -7,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -24,6 +27,9 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
         {
             _options = options.Value;
             _hostEnv = hostEnv;
+            HostLoader.AddSharedAssembly(typeof(IHostBuilder).Assembly,
+                typeof(IApplicationBuilder).Assembly,
+                typeof(HttpContext).Assembly);
         }
 
         public Task DisableModuleAsync(string moduleName)
@@ -66,31 +72,46 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
             throw new NotImplementedException();
         }
 
-        public Assembly LoadModuler(ModuleManifest moduleManifest)
+        public ModuleInfo LoadModuler(ModuleManifest moduleManifest)
         {
-            if(_hostLoader == null)
-            {
-                var modules = this.GetModules().Select(m => new PluginInfo
-                {
-                    PluginName = m.ModuleName,
-                    PluginDll = m.ModuleEntrypoint
-                });
-                _hostLoader = new HostLoader(modules);
-                //_hostLoader.AddSharedAssembly(typeof(IWebHost).Assembly,
-                //    typeof(Microsoft.Extensions.Hosting.IHostBuilder).Assembly,
-                //    typeof(IHost).Assembly);
-            }
-
-            return _hostLoader.LoadPlugin(new PluginInfo
+            var (_, alc) = HostLoader.LoadPlugin(new PluginInfo
             {
                 PluginName = moduleManifest.ModuleName,
                 PluginDll = moduleManifest.ModuleEntrypoint
             });
+            return new ModuleInfo
+            {
+                Alc = alc,
+                ModuleAssembly = alc.EntryAssemlby,
+                Manifest = moduleManifest
+            };
         }
 
         public Task UninstallModuleAsync(string moduleName)
         {
             throw new NotImplementedException();
+        }
+
+        public void Initialize()
+        {
+            var modules = this.GetModules();
+            HostLoader.LoadPlugins(modules.Select(m=> new PluginInfo
+            {
+                PluginName = m.ModuleName,
+                PluginDll = m.ModuleEntrypoint
+            }));
+        }
+
+        public IEnumerable<ModuleInfo> GetLoadedModules()
+        {
+            var modules = GetModules().ToArray();
+            return this.HostLoader.HostContext.Plugins.Select(x => new ModuleInfo
+            {
+                Alc = x.Value,
+                ModuleAssembly = x.Value.EntryAssemlby,
+                Manifest = modules.FirstOrDefault(m => string.Equals(x.Key, m.ModuleName)),
+                
+            });
         }
     }
 }

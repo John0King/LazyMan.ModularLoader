@@ -103,7 +103,7 @@ namespace LazyMan.ModularLoader
             foreach (var i in infos)
             {
                 this.HostContext.PluginInfos.Remove(info);
-                tasks.Add(this.UnloadOnly(info));
+                tasks.Add(this.InternalUnloadOnly(info));
             }
 
             return Task.WhenAll(tasks);
@@ -124,7 +124,7 @@ namespace LazyMan.ModularLoader
         /// </summary>
         /// <param name="info">插件信息</param>
         /// <returns></returns>
-        private Task UnloadOnly(PluginInfo info)
+        private Task InternalUnloadOnly(PluginInfo info)
         {
             var cts = new TaskCompletionSource<bool>();
             try
