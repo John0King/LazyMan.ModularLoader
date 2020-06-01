@@ -1,5 +1,4 @@
 using LazyMan.ModularLoader;
-using LazyMan.ModularLoader.Graph;
 using LazyMan.ModularLoader.Internal;
 using ModuleShared;
 using System;
@@ -34,25 +33,32 @@ namespace LoaderRunner
                 },
             };
 
-            var loader = new HostLoader(plugins);
+            var loader = new HostLoader();
             loader.AddSharedAssembly(typeof(IPlugIn).Assembly);
 
-            var assemblies = loader.LoadPlugins();
+            var pluginsInfo = loader.LoadPlugins(plugins);
             var pluginType = typeof(IPlugIn);
-            var pTypes =  assemblies.SelectMany(x => x.DefinedTypes)
-                .Where(t => pluginType.IsAssignableFrom(t))
-                .ToList();
-
-            foreach(var t in pTypes)
+            foreach(var (info, alc) in pluginsInfo)
             {
-                var p = Activator.CreateInstance(t) as IPlugIn;
-                var pl = AssemblyLoadContext.GetLoadContext(t.Assembly) as PluginAssemblyLoadContext;
                 Console.WriteLine();
-                Console.WriteLine($"-----------enter {pl.PluginInfo.PluginName}---------------");
-                p.WriteOutPut();
-                Console.WriteLine($"-----------leave {pl.PluginInfo.PluginName}---------------");
+                if (alc == null)
+                {
+                    Console.WriteLine($"----------plugin {info.PluginName} load faile---------------");
+                    continue;
+                }
+                Console.WriteLine($"----------plugin {info.PluginName} load success---------------");
+                Console.WriteLine($"-----------enter {info.PluginName}---------------");
+                foreach (var t in alc.EntryAssemlby.DefinedTypes.Where(t => pluginType.IsAssignableFrom(t)))
+                {
+                    var p = Activator.CreateInstance(t) as IPlugIn;
+                    p.WriteOutPut();
+                    
+                }
+
+                Console.WriteLine($"-----------leave {info.PluginName}---------------");
                 Console.WriteLine();
             }
+            
 
             Console.WriteLine("-------回到核心程序------");
 

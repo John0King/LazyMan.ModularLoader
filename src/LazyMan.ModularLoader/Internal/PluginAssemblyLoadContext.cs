@@ -1,13 +1,9 @@
-using LazyMan.ModularLoader.Graph;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Text;
 
 namespace LazyMan.ModularLoader.Internal
 {
@@ -41,12 +37,12 @@ namespace LazyMan.ModularLoader.Internal
         /// <summary>
         /// the context for this plugin
         /// </summary>
-        PluginContext ALCContext { get; }
+        internal PluginContext ALCContext { get; }
 
         /// <summary>
         /// the dependencyReolver
         /// </summary>
-        AssemblyDependencyResolver? Resolver { get; }
+        private AssemblyDependencyResolver? Resolver { get; }
 
         /// <inheritdoc />
         protected override Assembly? Load(AssemblyName assemblyName)
@@ -111,7 +107,6 @@ namespace LazyMan.ModularLoader.Internal
 
 
         /// <inheritdoc/>
-        /// <remarks> native ?  do we need any other handle method ?</remarks>
         protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
         {
             var path = Resolver?.ResolveUnmanagedDllToPath(unmanagedDllName);
@@ -119,7 +114,19 @@ namespace LazyMan.ModularLoader.Internal
             {
                 return LoadUnmanagedDllFromPath(path);
             }
-            return LoadUnmanagedDll(unmanagedDllName);
+
+            // problem: we  can not access to AssemblyLoadContext.LoadUnManagedDll() method,
+            //         we can only access our own , may be the base.LoadUnmanagedDll should 
+            //         do this for us.
+            if(this.ALCContext.HostLoadContext is PluginAssemblyLoadContext alc)
+            {
+                var ptr = alc.LoadUnmanagedDll(unmanagedDllName);
+                if(ptr != IntPtr.Zero)
+                {
+                    return ptr;
+                }
+            }
+            return base.LoadUnmanagedDll(unmanagedDllName);
         }
     }
 }

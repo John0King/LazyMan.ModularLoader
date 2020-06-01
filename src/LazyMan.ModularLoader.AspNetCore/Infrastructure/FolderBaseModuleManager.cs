@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
 {
@@ -17,13 +18,24 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
         private readonly ModuleOptions _options;
         private readonly IWebHostEnvironment _hostEnv;
 
-        internal HostLoader _hostLoader;
+        internal readonly HostLoader HostLoader = new HostLoader();
 
         public FolderBaseModuleManager(IOptions<ModuleOptions> options, IWebHostEnvironment hostEnv)
         {
             _options = options.Value;
             _hostEnv = hostEnv;
         }
+
+        public Task DisableModuleAsync(string moduleName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task EnableModuleAsync(string moduleName)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerable<ModuleManifest> GetModules()
         {
             var folder = Path.Combine(_hostEnv.ContentRootPath, _options.AppModuleFolder);
@@ -49,11 +61,16 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
             }
         }
 
+        public Task InstallModuleAsync(ModuleInstallOption moduleInstallOption)
+        {
+            throw new NotImplementedException();
+        }
+
         public Assembly LoadModuler(ModuleManifest moduleManifest)
         {
             if(_hostLoader == null)
             {
-                var modules = this.GetModules().Select(m => new LazyMan.ModularLoader.Graph.PluginInfo
+                var modules = this.GetModules().Select(m => new PluginInfo
                 {
                     PluginName = m.ModuleName,
                     PluginDll = m.ModuleEntrypoint
@@ -64,11 +81,16 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
                 //    typeof(IHost).Assembly);
             }
 
-            return _hostLoader.LoadPlugin(new Graph.PluginInfo
+            return _hostLoader.LoadPlugin(new PluginInfo
             {
                 PluginName = moduleManifest.ModuleName,
                 PluginDll = moduleManifest.ModuleEntrypoint
             });
+        }
+
+        public Task UninstallModuleAsync(string moduleName)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -12,7 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\src\LazyMan.ModularLoader\LazyMan.ModularLoader.csproj" />
+		<ProjectReference Include="..\..\..\src\LazyMan.ModularLoader\LazyMan.ModularLoader.csproj" />
 		<ProjectReference Include="..\ModuleShared\ModuleShared.csproj" />
 	</ItemGroup>
 

@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace LazyMan.ModularLoader.Graph
+namespace LazyMan.ModularLoader
 {
     public class PluginInfo
     {

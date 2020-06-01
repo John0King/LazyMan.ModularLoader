@@ -1,4 +1,4 @@
-﻿LayMan.ModularLoader
+﻿LazyMan.ModularLoader
 =========================
 
 一个方面的插件加载器，适用于.net core , 支持插件程序集隔离，和插件依赖， 支持加载原生库

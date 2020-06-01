@@ -1,4 +1,3 @@
-using LazyMan.ModularLoader.Graph;
 using LazyMan.ModularLoader.Internal;
 using Microsoft.VisualBasic;
 using System;
