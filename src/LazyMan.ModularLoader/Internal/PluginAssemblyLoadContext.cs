@@ -47,6 +47,9 @@ namespace LazyMan.ModularLoader.Internal
         /// <inheritdoc />
         protected override Assembly? Load(AssemblyName assemblyName)
         {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine("===loading " + assemblyName.FullName +"====");
             Assembly? a = null;
             // if the assembly is in SharedAssembies then we use that assembly first
             a = ALCContext.SharedAssemblies
@@ -54,6 +57,7 @@ namespace LazyMan.ModularLoader.Internal
                 .FirstOrDefault();
             if (a != null)
             {
+                Console.WriteLine($"load {assemblyName.FullName} from shared");
                 return a;
             }
 
@@ -69,6 +73,7 @@ namespace LazyMan.ModularLoader.Internal
                 a = alc.Value.LoadFromAssemblyName(assemblyName);
                 if (a != null)
                 {
+                    Console.WriteLine($"load {assemblyName.FullName} from alc:{alc.Value.Name}");
                     return a;
                 }
             }
@@ -78,6 +83,7 @@ namespace LazyMan.ModularLoader.Internal
             var path = Resolver?.ResolveAssemblyToPath(assemblyName);
             if (path != null)
             {
+                Console.WriteLine($"load {assemblyName.FullName} from locale: {path}");
                 return LoadFromAssemblyPath(path);
             }
 
@@ -89,6 +95,7 @@ namespace LazyMan.ModularLoader.Internal
             var file = PluginInfo.PluginFolder + assemblyName.Name + ".dll";
             if (File.Exists(file))
             {
+                Console.WriteLine($"load {assemblyName.FullName} from local folder:{file}");
                 return LoadFromAssemblyPath(file);
             }
 
@@ -96,12 +103,14 @@ namespace LazyMan.ModularLoader.Internal
             a =  ALCContext.HostLoadContext.LoadFromAssemblyName(assemblyName);
             if(a != null)
             {
+                Console.WriteLine($"load {assemblyName.FullName} from hostContext");
                 return a;
             }
-           
+
 
             // fallback to AssemblyLoadContext.Default
-
+            Console.WriteLine($"load {assemblyName.FullName} from default");
+            Console.ResetColor();
             return base.Load(assemblyName);
         }
 
