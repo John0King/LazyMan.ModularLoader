@@ -13,6 +13,7 @@ using System.Runtime.Loader;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using a =[Microsoft.Extentions.Logging.dll];
 
 namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
 {
@@ -27,11 +28,13 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
         {
             _options = options.Value;
             _hostEnv = hostEnv;
-            HostLoader.AddSharedAssembly(typeof(IHostBuilder).Assembly,
+            HostLoader.AddSharedAssembly(
+                typeof(IHostBuilder).Assembly,
                 typeof(IApplicationBuilder).Assembly,
                 typeof(HttpContext).Assembly,
-                typeof(IHost).Assembly,
-                typeof(Microsoft.Extensions.Logging.));
+                typeof(IHost).Assembly//,
+                //typeof(Microsoft.Extensions.Logging.LoggingBuilderExtensions).Assembly
+                );
         }
 
         public Task DisableModuleAsync(string moduleName)
