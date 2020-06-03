@@ -21,6 +21,8 @@ namespace LazyMan.ModularLoader
 
         public IEnumerable<Assembly> SharedAssemblies => HostContext.SharedAssemblies;
 
+        public IEnumerable<Func<AssemblyName, bool>> Conditions => HostContext.Conditions;
+
         public Dictionary<string, PluginAssemblyLoadContext> Plugins { get; } = new Dictionary<string, PluginAssemblyLoadContext>(StringComparer.OrdinalIgnoreCase);
     }
 }

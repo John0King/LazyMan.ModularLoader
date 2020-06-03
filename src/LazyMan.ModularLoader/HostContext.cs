@@ -20,6 +20,8 @@ namespace LazyMan.ModularLoader
 
 
         public List<Assembly> SharedAssemblies { get; } = new List<Assembly>();
+
+        public List<Func<AssemblyName, bool>> Conditions { get; } = new List<Func<AssemblyName, bool>>();
 #nullable enable
     }
 }

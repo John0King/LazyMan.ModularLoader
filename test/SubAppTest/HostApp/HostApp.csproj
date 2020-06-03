@@ -6,6 +6,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.1" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\..\src\LazyMan.ModularLoader.AspNetCore\LazyMan.ModularLoader.AspNetCore.csproj" />
 	</ItemGroup>
 

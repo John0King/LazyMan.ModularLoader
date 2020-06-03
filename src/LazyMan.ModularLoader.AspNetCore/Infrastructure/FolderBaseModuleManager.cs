@@ -2,6 +2,7 @@ using LazyMan.ModularLoader.AspNetCore.Abstractions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System;
@@ -31,9 +32,16 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
                 typeof(IHostBuilder).Assembly,
                 typeof(IApplicationBuilder).Assembly,
                 typeof(HttpContext).Assembly,
-                typeof(IHost).Assembly//,
+                typeof(IHost).Assembly,
+                typeof(IServiceCollection).Assembly
                 //typeof(Microsoft.Extensions.Logging.LoggingBuilderExtensions).Assembly
                 );
+            HostLoader.ForceHostShared(asbn => asbn.Name.StartsWith("Microsoft.Extensions.")
+                                               && asbn.Name != "Microsoft.Extensions.DependencyModel");
+            //HostLoader.ForceHostShared(asbn => asbn.Name.StartsWith("Microsoft.AspNetCore.")
+            //                                   && !asbn.Name.StartsWith("Microsoft.AspNetCore.SpaServices")
+            //                                   && asbn.Name != "Microsoft.AspNetCore.Authentication.JwtBearer");
+            //HostLoader.ForceHostShared(asbn => asbn.Name.StartsWith("Microsoft.EntityFrameworkCore"));
         }
 
         public Task DisableModuleAsync(string moduleName)

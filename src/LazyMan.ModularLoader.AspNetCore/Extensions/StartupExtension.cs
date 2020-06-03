@@ -59,7 +59,7 @@ namespace Microsoft.Extensions.DependencyInjection
                       {
                           subapp.Map(modulePrefix.Add("/" + module.ModuleName), subapp2 =>
                            {
-                               var (requestDelegate, service) = pipelineCacheManager.GetOrCache(module.ModuleName);
+                               var (requestDelegate, service, alc) = pipelineCacheManager.GetOrCache(module.ModuleName);
                                if(requestDelegate != null)
                                {
                                    subapp2.UseRouting();
@@ -80,7 +80,11 @@ namespace Microsoft.Extensions.DependencyInjection
                                    subapp2.Use(next => async http =>
                                    {
                                        var http2 = new DefaultHttpContextFactory(service).Create(http.Features);
-                                       await requestDelegate(http2);
+                                       using (alc.EnterContextualReflection())
+                                       {
+                                           await requestDelegate(http2);
+                                       }
+                                       
                                    });
                                }
                               

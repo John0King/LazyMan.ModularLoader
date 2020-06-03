@@ -36,6 +36,11 @@ namespace LazyMan.ModularLoader
             this.AddSharedAssembly(assemblies as IEnumerable<Assembly>);
         }
 
+        public void ForceHostShared(Func<AssemblyName, bool> condition)
+        {
+            this.HostContext.Conditions.Add(condition);
+        }
+
         /// <summary>
         /// 加载新的插件
         /// </summary>

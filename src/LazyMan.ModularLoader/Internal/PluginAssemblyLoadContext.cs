@@ -19,12 +19,32 @@ namespace LazyMan.ModularLoader.Internal
                 // resolver have bug for fileName
                 Resolver = new AssemblyDependencyResolver(info.PluginDll);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Debug.WriteLine(e);
             }
-            // if this load fail, then throw
-            EntryAssemlby = this.LoadFromAssemblyPath(info.PluginDll);
+            //using (this.EnterContextualReflection())
+            //{
+                // if this load fail, then throw
+                EntryAssemlby = this.LoadFromAssemblyPath(info.PluginDll);
+                //foreach (var asln in EntryAssemlby.GetReferencedAssemblies())
+                //{
+                //    Console.WriteLine("#########################################");
+                //    try
+                //    {
+                //        Console.WriteLine(asln.Name);
+                //        this.LoadFromAssemblyName(asln);
+                //    }
+                //    catch (Exception e)
+                //    {
+                //        Console.WriteLine("can not load " + asln.Name);
+                //        Console.WriteLine(e);
+                //    }
+                //    Console.WriteLine("#########################################");
+                //}
+            //}
+                
+                
         }
 
         public Assembly EntryAssemlby { get; }
@@ -47,15 +67,21 @@ namespace LazyMan.ModularLoader.Internal
         /// <inheritdoc />
         protected override Assembly? Load(AssemblyName assemblyName)
         {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"=== [{this.Name}] loading [{ assemblyName.FullName }]====");
             Assembly? a = null;
             // if the assembly is in SharedAssembies then we use that assembly first
             a = ALCContext.SharedAssemblies
-                .Where(x=>AssemblyName.ReferenceMatchesDefinition(x.GetName(),assemblyName))
+                .Where(x => AssemblyName.ReferenceMatchesDefinition(x.GetName(), assemblyName))
                 .FirstOrDefault();
             if (a != null)
             {
+                Console.WriteLine($"load {assemblyName.Name} from shared");
                 return a;
             }
+
+            
 
             // if the assembly is in dependented plugins 
             // then we use the assembly in the assembly in dependented plugin
@@ -69,6 +95,7 @@ namespace LazyMan.ModularLoader.Internal
                 a = alc.Value.LoadFromAssemblyName(assemblyName);
                 if (a != null)
                 {
+                    Console.WriteLine($"load {assemblyName.Name} from alc:{alc.Value.Name}");
                     return a;
                 }
             }
@@ -78,6 +105,16 @@ namespace LazyMan.ModularLoader.Internal
             var path = Resolver?.ResolveAssemblyToPath(assemblyName);
             if (path != null)
             {
+                foreach (var condition in this.ALCContext.Conditions)
+                {
+                    if (condition(assemblyName))
+                    {
+                        Console.WriteLine($"load {assemblyName.Name} from hostcontext [{this.ALCContext.HostLoadContext.Name}] by condition \n from {path}");
+                        /*return*/ this.ALCContext.HostLoadContext.LoadFromAssemblyPath(path);
+                        return null;
+                    }
+                }
+                Console.WriteLine($"load {assemblyName.Name} from locale: {path}");
                 return LoadFromAssemblyPath(path);
             }
 
@@ -89,19 +126,22 @@ namespace LazyMan.ModularLoader.Internal
             var file = PluginInfo.PluginFolder + assemblyName.Name + ".dll";
             if (File.Exists(file))
             {
+                Console.WriteLine($"load {assemblyName.Name} from local folder:{file}");
                 return LoadFromAssemblyPath(file);
             }
 
             // fallback to Host AssemlbyLoadContext
-            a =  ALCContext.HostLoadContext.LoadFromAssemblyName(assemblyName);
-            if(a != null)
+            a = ALCContext.HostLoadContext.LoadFromAssemblyName(assemblyName);
+            if (a != null)
             {
+                Console.WriteLine($"load {assemblyName.Name} from hostContext[{this.ALCContext.HostLoadContext.Name}]");
                 return a;
             }
-           
+
 
             // fallback to AssemblyLoadContext.Default
-
+            Console.WriteLine($"load {assemblyName.Name} from default");
+            Console.ResetColor();
             return base.Load(assemblyName);
         }
 
@@ -118,10 +158,10 @@ namespace LazyMan.ModularLoader.Internal
             // problem: we  can not access to AssemblyLoadContext.LoadUnManagedDll() method,
             //         we can only access our own , may be the base.LoadUnmanagedDll should 
             //         do this for us.
-            if(this.ALCContext.HostLoadContext is PluginAssemblyLoadContext alc)
+            if (this.ALCContext.HostLoadContext is PluginAssemblyLoadContext alc)
             {
                 var ptr = alc.LoadUnmanagedDll(unmanagedDllName);
-                if(ptr != IntPtr.Zero)
+                if (ptr != IntPtr.Zero)
                 {
                     return ptr;
                 }

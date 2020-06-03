@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using LazyMan.ModularLoader.Internal;
@@ -42,13 +43,37 @@ namespace HostApp
                     await Task.CompletedTask;
                 });
             });
-
+            var dic = new Dictionary<string, int>();
             // razor bug fix
             AssemblyLoadContext.Default.Resolving += (alc, asbn) =>
             {
                 return AssemblyLoadContext.All.OfType<PluginAssemblyLoadContext>()
                 .Where(x => x.PluginInfo.PluginName.Equals(asbn.Name, StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault()?.LoadFromAssemblyName(asbn);
+                //if (AssemblyLoadContext.CurrentContextualReflectionContext == null)
+                //{
+                //    return null;
+                //}
+                //if (AssemblyLoadContext.CurrentContextualReflectionContext == alc)
+                //{
+                //    return null;
+                //}
+                //if (dic.TryGetValue(asbn.FullName, out var c))
+                //{
+                //    if (c > 0)
+                //    {
+                //        return null;
+                //    }
+                //}
+                //if (dic.ContainsKey(asbn.FullName))
+                //{
+                //    dic[asbn.FullName] = dic[asbn.FullName] + 1;
+                //}
+                //else
+                //{
+                //    dic[asbn.FullName] = 0;
+                //}
+                //return AssemblyLoadContext.CurrentContextualReflectionContext.LoadFromAssemblyName(asbn);
             };
             app.UseSubAppModules("/m");
 

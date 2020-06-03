@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
@@ -22,15 +23,12 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
             ModuleManager = moduleManager;
         }
 
-        private ConcurrentDictionary<string, (RequestDelegate,IServiceProvider)> _cahce = new ConcurrentDictionary<string, (RequestDelegate, IServiceProvider)>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, (RequestDelegate,IServiceProvider, AssemblyLoadContext)> _cahce = new ConcurrentDictionary<string, (RequestDelegate, IServiceProvider, AssemblyLoadContext)>(StringComparer.OrdinalIgnoreCase);
         public IModuleManager ModuleManager { get; }
 
-        public (RequestDelegate,IServiceProvider) GetOrCache(string moduleName)
+        public (RequestDelegate,IServiceProvider, AssemblyLoadContext) GetOrCache(string moduleName)
         {
-            if (_cahce.TryGetValue(moduleName, out var v))
-            {
-                return v;
-            }
+            
             var modules = ModuleManager.GetLoadedModules();
             var info = modules.Where(i => string.Equals(i.Manifest.ModuleName, moduleName, StringComparison.OrdinalIgnoreCase))
                 .FirstOrDefault();
@@ -41,6 +39,10 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
             }
             using (info.Alc.EnterContextualReflection())
             {
+                if (_cahce.TryGetValue(moduleName, out var v))
+                {
+                    return v;
+                }
                 //var cdir = Directory.GetCurrentDirectory();
                 //Directory.SetCurrentDirectory(Path.GetDirectoryName(info.Manifest.ModuleEntrypoint));
                 var entryType = AssemblyHelper.FindEntrypointType(info.ModuleAssembly);
@@ -91,13 +93,13 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
                 configureMethod.Invoke(instance, parameters.ToArray());
 
                 var requestDelegate = appBuilder.Build();
-                _cahce.TryAdd(moduleName, (requestDelegate, service));
+                _cahce.TryAdd(moduleName, (requestDelegate, service,info.Alc));
 
 
 
 
                 //Directory.SetCurrentDirectory(cdir);
-                return (requestDelegate, service);
+                return (requestDelegate, service, info.Alc);
             }
                 
         }
