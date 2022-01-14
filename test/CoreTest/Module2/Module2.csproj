@@ -1,10 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netcoreapp3.1</TargetFramework>
+		<TargetFramework>net6.0</TargetFramework>
 		<OutDir>..\dist\modules\Module2</OutDir>
 		<Version>1.0.1</Version>
-
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+        <EnableDynamicLoading>true</EnableDynamicLoading>
 	</PropertyGroup>
 
 	<ItemGroup>

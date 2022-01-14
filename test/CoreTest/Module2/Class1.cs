@@ -1,5 +1,4 @@
 using ModuleShared;
-using System;
 
 namespace Module2
 {

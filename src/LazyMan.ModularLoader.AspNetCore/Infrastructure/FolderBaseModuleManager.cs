@@ -36,7 +36,7 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
                 typeof(IServiceCollection).Assembly
                 //typeof(Microsoft.Extensions.Logging.LoggingBuilderExtensions).Assembly
                 );
-            HostLoader.ForceHostShared(asbn => asbn.Name.StartsWith("Microsoft.Extensions.")
+            HostLoader.ForceHostShared(asbn => asbn.Name?.StartsWith("Microsoft.Extensions.") == true
                                                && asbn.Name != "Microsoft.Extensions.DependencyModel");
             //HostLoader.ForceHostShared(asbn => asbn.Name.StartsWith("Microsoft.AspNetCore.")
             //                                   && !asbn.Name.StartsWith("Microsoft.AspNetCore.SpaServices")
@@ -66,20 +66,21 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
                     continue;
                 }
                 var manifest = JsonSerializer.Deserialize<ModuleManifest>(File.ReadAllText(file));
+                if (manifest == null) continue;
                 if(manifest.ModuleEntrypoint == null)
                 {
-                    manifest.ModuleEntrypoint = new DirectoryInfo(Path.GetDirectoryName(file)).Name + ".dll";
+                    manifest.ModuleEntrypoint = new DirectoryInfo(Path.GetDirectoryName(file)!).Name + ".dll";
                 }
                 if(manifest.ModuleEntrypoint.StartsWith("/") || manifest.ModuleEntrypoint.StartsWith("\\"))
                 {
                     manifest.ModuleEntrypoint = manifest.ModuleEntrypoint.Substring(1);
                 }
-                manifest.ModuleEntrypoint = Path.Combine(Path.GetDirectoryName(file), manifest.ModuleEntrypoint);
+                manifest.ModuleEntrypoint = Path.Combine(Path.GetDirectoryName(file)!, manifest.ModuleEntrypoint);
                 yield return manifest;
             }
         }
 
-        public Task InstallModuleAsync(ModuleInstallOption moduleInstallOption)
+        public virtual Task InstallModuleAsync(ModuleInstallOption moduleInstallOption)
         {
             throw new NotImplementedException();
         }
@@ -99,7 +100,7 @@ namespace LazyMan.ModularLoader.AspNetCore.Infrastructure
             };
         }
 
-        public Task UninstallModuleAsync(string moduleName)
+        public virtual Task UninstallModuleAsync(string moduleName)
         {
             throw new NotImplementedException();
         }

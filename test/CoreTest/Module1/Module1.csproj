@@ -1,12 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-	  <OutDir>..\dist\modules\Module1</OutDir>
+    <TargetFramework>net6.0</TargetFramework>
+    <OutDir>..\dist\modules\Module1</OutDir>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="4.1.1" />
+    <PackageReference Include="AutoMapper" Version="4.1.1"  />
   </ItemGroup>
 
   <ItemGroup>

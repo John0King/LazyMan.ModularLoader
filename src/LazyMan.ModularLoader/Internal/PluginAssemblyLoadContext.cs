@@ -7,6 +7,9 @@ using System.Runtime.Loader;
 
 namespace LazyMan.ModularLoader.Internal
 {
+    /// <summary>
+    /// 插件ALC
+    /// </summary>
     public class PluginAssemblyLoadContext : AssemblyLoadContext
     {
         public PluginAssemblyLoadContext(PluginInfo info, PluginContext alcContext)
@@ -16,7 +19,8 @@ namespace LazyMan.ModularLoader.Internal
             ALCContext = alcContext ?? throw new ArgumentNullException(nameof(alcContext));
             try
             {
-                // resolver have bug for fileName
+                // resolver have bug for fileName(seems fixed for windows)
+                // the problem is:  AssemblyName and FileName missmatch eg. AssemblyName[Abc] with the FileName[abc.dll]
                 Resolver = new AssemblyDependencyResolver(info.PluginDll);
             }
             catch (Exception e)
@@ -78,6 +82,7 @@ namespace LazyMan.ModularLoader.Internal
             if (a != null)
             {
                 Console.WriteLine($"load {assemblyName.Name} from shared");
+                Console.ResetColor();
                 return a;
             }
 
@@ -96,6 +101,7 @@ namespace LazyMan.ModularLoader.Internal
                 if (a != null)
                 {
                     Console.WriteLine($"load {assemblyName.Name} from alc:{alc.Value.Name}");
+                    Console.ResetColor();
                     return a;
                 }
             }
@@ -111,6 +117,7 @@ namespace LazyMan.ModularLoader.Internal
                     {
                         Console.WriteLine($"load {assemblyName.Name} from hostcontext [{this.ALCContext.HostLoadContext.Name}] by condition \n from {path}");
                         /*return*/ this.ALCContext.HostLoadContext.LoadFromAssemblyPath(path);
+                        Console.ResetColor();
                         return null;
                     }
                 }
@@ -127,6 +134,7 @@ namespace LazyMan.ModularLoader.Internal
             if (File.Exists(file))
             {
                 Console.WriteLine($"load {assemblyName.Name} from local folder:{file}");
+                Console.ResetColor();
                 return LoadFromAssemblyPath(file);
             }
 
@@ -135,6 +143,7 @@ namespace LazyMan.ModularLoader.Internal
             if (a != null)
             {
                 Console.WriteLine($"load {assemblyName.Name} from hostContext[{this.ALCContext.HostLoadContext.Name}]");
+                Console.ResetColor();
                 return a;
             }
 
